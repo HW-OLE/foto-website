@@ -18,9 +18,13 @@ $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(
 ));
 foreach ($it as $file) {
     if (!$file->isFile()) continue;
-    if (!preg_match('/\.(jpe?g|png|webp|gif)$/i', $file->getFilename())) continue;
+    $name = $file->getFilename();
+    // Nur JPGs
+    if (!preg_match('/\.jpe?g$/i', $name)) continue;
     // WordPress-Thumbnails überspringen (z.B. foto-800x600.jpg)
-    if (preg_match('/-\d+x\d+\.(jpe?g|png|webp|gif)$/i', $file->getFilename())) continue;
+    if (preg_match('/-\d+x\d+\.jpe?g$/i', $name)) continue;
+    // WordPress -scaled Varianten überspringen
+    if (preg_match('/-scaled\.jpe?g$/i', $name)) continue;
     $files[] = $file->getPathname();
 }
 
