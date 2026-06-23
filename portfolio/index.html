@@ -13,7 +13,10 @@
 
 <header class="site-header">
   <nav class="wrap nav">
-    <a class="brand" href="/"><img src="/wp-content/uploads/2022/08/logo2-modified-150x150.png" alt="Ole B Fotografie Logo"><span>Ole B Fotografie</span></a>
+    <a class="brand" href="/">
+      <img src="/wp-content/uploads/2022/08/logo2-modified-150x150.png" alt="Ole B Fotografie Logo">
+      <span>Ole B Fotografie</span>
+    </a>
     <div class="links">
       <a href="/">Home</a>
       <a href="/about/">Über mich</a>
@@ -24,27 +27,35 @@
   </nav>
 </header>
 
-<main class="wrap">
-  <section class="page-hero">
-    <p class="eyebrow">Portfolio</p>
-    <h1 class="page-title">Fotos</h1>
-    <p class="lead">Eine schlanke Auswahl aus den bestehenden Bilddateien. Zum Öffnen der großen Version einfach ein Bild anklicken.</p>
-  </section>
+<main>
+  <div class="wrap">
+    <section class="page-hero">
+      <p class="eyebrow">Portfolio</p>
+      <h1 class="page-title">Fotos</h1>
+      <p class="lead">Eine Auswahl aus den Bilddateien. Zum Öffnen der großen Version einfach ein Bild anklicken.</p>
+    </section>
+  </div>
 
-  <section class="section grid gallery" id="gallery" aria-label="Fotogalerie">
-    <p class="muted" id="gallery-loading" style="grid-column:1/-1">Bilder werden geladen…</p>
-  </section>
-
-  <div id="lightbox" role="dialog" aria-modal="true" aria-label="Bild in voller Größe" hidden>
-    <button id="lightbox-close" aria-label="Schließen">✕</button>
-    <button id="lightbox-prev" aria-label="Vorheriges Bild">&#8592;</button>
-    <button id="lightbox-next" aria-label="Nächstes Bild">&#8594;</button>
-    <img id="lightbox-img" src="" alt="">
+  <div class="wrap">
+    <section class="section grid gallery" id="gallery" aria-label="Fotogalerie">
+      <p class="muted" id="gallery-loading" style="grid-column:1/-1">Bilder werden geladen…</p>
+    </section>
   </div>
 </main>
 
+<!-- Lightbox -->
+<div id="lightbox" role="dialog" aria-modal="true" aria-label="Bild in voller Größe" hidden>
+  <button id="lightbox-close" aria-label="Schließen">✕</button>
+  <button id="lightbox-prev" aria-label="Vorheriges Bild">&#8592;</button>
+  <button id="lightbox-next" aria-label="Nächstes Bild">&#8594;</button>
+  <img id="lightbox-img" src="" alt="">
+</div>
+
 <footer class="site-footer">
-  <div class="wrap">© <span data-year></span> Ole B Fotografie · Bilder unter <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noreferrer">CC BY-NC 4.0</a></div>
+  <div class="wrap">
+    © <span data-year></span> Ole B Fotografie · Bilder unter
+    <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noreferrer">CC BY-NC 4.0</a>
+  </div>
 </footer>
 
 </body>
