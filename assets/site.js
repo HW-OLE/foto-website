@@ -29,8 +29,6 @@ document.querySelectorAll('[data-year]').forEach(
 
   /* ── Layout engine ─────────────────────────────────── */
 
-  // Weighted pool of CSS classes that tile the 12-column grid.
-  // wide = 8 cols, small = 4 cols, tall = 4 cols + 2 rows
   const SLOT_POOL = [
     'wide', 'wide', 'small',
     'tall', 'small', 'small',
@@ -47,16 +45,13 @@ document.querySelectorAll('[data-year]').forEach(
     return a;
   }
 
-  // Detect portrait orientation from filename dimensions e.g. photo-680x1024.jpg
   function isPortrait(src) {
     const m = src.match(/[-_](\d+)[x×](\d+)\.\w+$/i);
     return m ? parseInt(m[2], 10) > parseInt(m[1], 10) : false;
   }
 
-  // Pull the best-fitting slot from the pool for this image
   function pickSlot(src, pool) {
-    const portrait  = isPortrait(src);
-    const preferred = portrait ? ['tall', 'small'] : ['wide', 'small'];
+    const preferred = isPortrait(src) ? ['tall', 'small'] : ['wide', 'small'];
     for (const p of preferred) {
       const idx = pool.indexOf(p);
       if (idx !== -1) { pool.splice(idx, 1); return p; }
@@ -64,7 +59,6 @@ document.querySelectorAll('[data-year]').forEach(
     return pool.splice(0, 1)[0] || 'small';
   }
 
-  // Build enough shuffled slots for n images
   function buildPool(n) {
     let pool = [];
     while (pool.length < n) pool = pool.concat(SLOT_POOL);
@@ -77,13 +71,11 @@ document.querySelectorAll('[data-year]').forEach(
     const a      = document.createElement('a');
     a.className  = `photo ${slotClass}`;
     a.href       = src;
-
     const img    = document.createElement('img');
     img.src      = src;
     img.alt      = 'Foto von Ole B';
     img.loading  = 'lazy';
     img.decoding = 'async';
-
     a.appendChild(img);
     return a;
   }
@@ -133,33 +125,40 @@ document.querySelectorAll('[data-year]').forEach(
 
   /* ── Fetch & render ────────────────────────────────── */
 
+  function showError(msg) {
+    const ph = document.getElementById('gallery-loading');
+    if (ph) ph.textContent = 'Galerie-Fehler: ' + msg;
+    console.error('[gallery]', msg);
+  }
+
   fetch('/wp-content/uploads/photos.php')
-    .then((r) => {
-      if (!r.ok) throw new Error(`photos.php nicht erreichbar (${r.status})`);
-      return r.json();
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status + ' – photos.php nicht erreichbar');
+      return r.text();
     })
-    .then((srcs) => {
+    .then(function(text) {
+      var srcs;
+      try { srcs = JSON.parse(text); }
+      catch(e) { throw new Error('Ungültiges JSON von photos.php: ' + text.slice(0, 200)); }
+
       if (!Array.isArray(srcs) || srcs.length === 0)
         throw new Error('Keine Bilder gefunden.');
 
-      document.getElementById('gallery-loading')?.remove();
+      document.getElementById('gallery-loading') &&
+        document.getElementById('gallery-loading').remove();
 
-      // Shuffle image order — fresh layout every visit
-      const ordered = shuffle(srcs);
-      const pool    = buildPool(ordered.length);
+      var ordered = shuffle(srcs);
+      var pool    = buildPool(ordered.length);
 
-      ordered.forEach((src, i) => {
-        const el = makePhotoEl(src, pickSlot(src, pool));
-        el.addEventListener('click', (e) => {
+      ordered.forEach(function(src, i) {
+        var el = makePhotoEl(src, pickSlot(src, pool));
+        el.addEventListener('click', function(e) {
           e.preventDefault();
           lbOpen(ordered, i);
         });
         gallery.appendChild(el);
       });
     })
-    .catch((err) => {
-      const ph = document.getElementById('gallery-loading');
-      if (ph) ph.textContent = `Galerie konnte nicht geladen werden: ${err.message}`;
-      console.error('[gallery]', err);
-    });
+    .catch(function(err) { showError(err.message); });
+
 })();
