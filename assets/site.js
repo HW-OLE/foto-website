@@ -1,15 +1,9 @@
+const birthDate = new Date('2008-09-18T00:00:00');
 const ageTargets = document.querySelectorAll('[data-age]');
-
-function currentAge(date = new Date()) {
-  const currentYear = date.getFullYear();
-  const birthdayThisYear = new Date(currentYear, 8, 18);
-  return currentYear - 2008 - Number(date < birthdayThisYear);
+function ageOn(date) {
+  let age = date.getFullYear() - birthDate.getFullYear();
+  const birthdayPassed = date.getMonth() > birthDate.getMonth() || (date.getMonth() === birthDate.getMonth() && date.getDate() >= birthDate.getDate());
+  return birthdayPassed ? age : age - 1;
 }
-
-ageTargets.forEach((target) => {
-  target.textContent = currentAge();
-});
-
-document.querySelectorAll('[data-year]').forEach((target) => {
-  target.textContent = new Date().getFullYear();
-});
+ageTargets.forEach((target) => { target.textContent = ageOn(new Date()); });
+document.querySelectorAll('[data-year]').forEach((target) => { target.textContent = new Date().getFullYear(); });
