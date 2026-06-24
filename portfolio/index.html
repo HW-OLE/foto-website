@@ -39,60 +39,6 @@
   </div>
 </main>
 
-<!-- Lightbox -->
-<style>
-  #lightbox {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    background: rgba(8,9,11,.96);
-    align-items: center;
-    justify-content: center;
-  }
-  #lightbox.open { display: flex; }
-  #lightbox img {
-    max-width: calc(100vw - 120px);
-    max-height: calc(100vh - 80px);
-    width: auto;
-    height: auto;
-    object-fit: contain;
-    border-radius: 12px;
-    box-shadow: 0 24px 80px rgba(0,0,0,.7);
-    display: block;
-  }
-  #lightbox-close, #lightbox-prev, #lightbox-next {
-    position: fixed;
-    background: rgba(255,255,255,.08);
-    border: 1px solid rgba(255,255,255,.14);
-    color: #f4f0e8;
-    border-radius: 999px;
-    cursor: pointer;
-    font-size: 1.4rem;
-    line-height: 1;
-    font-family: inherit;
-    transition: background .2s, border-color .2s;
-  }
-  #lightbox-close { top: 20px; right: 24px; padding: .6rem .9rem; font-size: 1.1rem; }
-  #lightbox-prev  { top: 50%; left: 16px;  transform: translateY(-50%); padding: .8rem 1.1rem; }
-  #lightbox-next  { top: 50%; right: 16px; transform: translateY(-50%); padding: .8rem 1.1rem; }
-  #lightbox-close:hover, #lightbox-prev:hover, #lightbox-next:hover {
-    background: rgba(215,168,95,.18);
-    border-color: rgba(215,168,95,.7);
-  }
-  @media (max-width: 760px) {
-    #lightbox img { max-width: 100vw; max-height: calc(100vh - 120px); border-radius: 0; }
-    #lightbox-prev { left: 4px; }
-    #lightbox-next { right: 4px; }
-  }
-</style>
-<div id="lightbox" role="dialog" aria-modal="true" aria-label="Bild in voller Größe">
-  <button id="lightbox-close" aria-label="Schließen">✕</button>
-  <button id="lightbox-prev" aria-label="Vorheriges Bild">&#8592;</button>
-  <button id="lightbox-next" aria-label="Nächstes Bild">&#8594;</button>
-  <img id="lightbox-img" src="" alt="">
-</div>
-
 <footer class="site-footer">
   <div class="wrap">
     © 2025 Ole B Fotografie · Bilder unter
@@ -102,6 +48,8 @@
 
 <script>
 (function () {
+
+  /* ── Bildliste ── */
   var PHOTOS = [
     '/wp-content/uploads/2022/08/DSC00295.jpg',
     '/wp-content/uploads/2022/08/DSC00333.jpg',
@@ -123,6 +71,7 @@
     '/wp-content/uploads/auswahl_neu/_DSC6503.jpg'
   ];
 
+  /* ── Galerie ── */
   var SLOTS = ['wide','wide','small','tall','small','small','wide','small','small','wide','small','tall'];
 
   function shuffle(arr) {
@@ -140,74 +89,133 @@
     return shuffle(pool).slice(0, n);
   }
 
-  function pickSlot(pool) {
-    return pool.shift() || 'small';
-  }
-
-  /* ── Galerie rendern ── */
   var gallery = document.getElementById('gallery');
   var ordered = shuffle(PHOTOS);
   var pool    = buildPool(ordered.length);
 
   ordered.forEach(function (src, i) {
-    var a   = document.createElement('a');
-    a.className = 'photo ' + pickSlot(pool);
-    a.href  = src;
+    var a       = document.createElement('a');
+    a.className = 'photo ' + (pool.shift() || 'small');
+    a.href      = src;
 
-    var img = document.createElement('img');
+    var img     = document.createElement('img');
     img.src     = src;
     img.alt     = 'Foto von Ole B';
     img.loading = 'lazy';
-
     a.appendChild(img);
 
     a.addEventListener('click', function (e) {
       e.preventDefault();
-      lbOpen(ordered, i);
+      open(i);
     });
 
     gallery.appendChild(a);
   });
 
-  /* ── Lightbox ── */
-  var lightbox = document.getElementById('lightbox');
-  var lbImg    = document.getElementById('lightbox-img');
-  var lbClose  = document.getElementById('lightbox-close');
-  var lbPrev   = document.getElementById('lightbox-prev');
-  var lbNext   = document.getElementById('lightbox-next');
-  var lbSrcs   = [];
-  var lbIdx    = 0;
+  /* ── Viewer ──
+     Wird komplett per JS ins document.body gehängt,
+     NACH dem Header — kein backdrop-filter Elternelement,
+     keine CSS-Konflikte möglich.
+  ── */
+  var srcs = ordered;
+  var idx  = 0;
 
-  function lbShow() {
-    lbImg.src     = lbSrcs[lbIdx];
-    lbImg.alt     = 'Foto ' + (lbIdx + 1) + ' von ' + lbSrcs.length;
-    lbPrev.hidden = lbIdx === 0;
-    lbNext.hidden = lbIdx === lbSrcs.length - 1;
+  // Overlay
+  var overlay = document.createElement('div');
+  overlay.id  = 'viewer';
+  set(overlay, {
+    display:         'none',
+    position:        'fixed',
+    top:             '0',
+    left:            '0',
+    width:           '100vw',
+    height:          '100vh',
+    background:      'rgba(8,9,11,0.96)',
+    zIndex:          '999999',
+    alignItems:      'center',
+    justifyContent:  'center',
+    boxSizing:       'border-box'
+  });
+
+  // Bild
+  var pic = document.createElement('img');
+  set(pic, {
+    display:   'block',
+    maxWidth:  'calc(100vw - 100px)',
+    maxHeight: 'calc(100vh - 60px)',
+    width:     'auto',
+    height:    'auto',
+    objectFit: 'contain',
+    borderRadius: '10px'
+  });
+
+  // Schließen
+  var btnClose = btn('✕',  { top:'16px', right:'20px' });
+  var btnPrev  = btn('←',  { top:'50%',  left:'16px',  transform:'translateY(-50%)' });
+  var btnNext  = btn('→',  { top:'50%',  right:'16px', transform:'translateY(-50%)' });
+
+  overlay.appendChild(pic);
+  overlay.appendChild(btnClose);
+  overlay.appendChild(btnPrev);
+  overlay.appendChild(btnNext);
+  document.body.appendChild(overlay);
+
+  function btn(label, pos) {
+    var b = document.createElement('button');
+    b.textContent = label;
+    var s = {
+      position:   'fixed',
+      background: 'rgba(255,255,255,0.1)',
+      border:     '1px solid rgba(255,255,255,0.2)',
+      color:      '#f4f0e8',
+      borderRadius: '999px',
+      cursor:     'pointer',
+      fontSize:   '1.3rem',
+      lineHeight: '1',
+      padding:    '0.7rem 1rem',
+      fontFamily: 'inherit',
+      zIndex:     '1000000'
+    };
+    Object.assign(s, pos);
+    set(b, s);
+    return b;
   }
 
-  function lbOpen(srcs, idx) {
-    lbSrcs = srcs; lbIdx = idx;
-    lbShow();
-    lightbox.classList.add("open");
+  function set(el, styles) {
+    Object.assign(el.style, styles);
+  }
+
+  function show() {
+    pic.src         = srcs[idx];
+    btnPrev.style.display = idx === 0            ? 'none' : 'block';
+    btnNext.style.display = idx === srcs.length-1 ? 'none' : 'block';
+  }
+
+  function open(i) {
+    idx = i;
+    show();
+    overlay.style.display = 'flex';
     document.body.style.overflow = 'hidden';
-    lbClose.focus();
+    btnClose.focus();
   }
 
-  function lbCloseAll() {
-    lightbox.classList.remove("open");
+  function close() {
+    overlay.style.display = 'none';
     document.body.style.overflow = '';
   }
 
-  lbClose.addEventListener('click', lbCloseAll);
-  lbPrev.addEventListener('click',  function () { lbIdx--; lbShow(); });
-  lbNext.addEventListener('click',  function () { lbIdx++; lbShow(); });
-  lightbox.addEventListener('click', function (e) { if (e.target === lightbox) lbCloseAll(); });
-  document.addEventListener('keydown', function (e) {
-    if (!lightbox.classList.contains("open")) return;
-    if (e.key === 'Escape')                                   lbCloseAll();
-    if (e.key === 'ArrowLeft'  && lbIdx > 0)                 { lbIdx--; lbShow(); }
-    if (e.key === 'ArrowRight' && lbIdx < lbSrcs.length - 1) { lbIdx++; lbShow(); }
+  btnClose.addEventListener('click', close);
+  btnPrev.addEventListener('click',  function() { idx--; show(); });
+  btnNext.addEventListener('click',  function() { idx++; show(); });
+  overlay.addEventListener('click',  function(e) { if (e.target === overlay) close(); });
+
+  document.addEventListener('keydown', function(e) {
+    if (overlay.style.display === 'none') return;
+    if (e.key === 'Escape')                              close();
+    if (e.key === 'ArrowLeft'  && idx > 0)               { idx--; show(); }
+    if (e.key === 'ArrowRight' && idx < srcs.length - 1) { idx++; show(); }
   });
+
 })();
 </script>
 
