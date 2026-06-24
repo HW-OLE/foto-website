@@ -40,7 +40,53 @@
 </main>
 
 <!-- Lightbox -->
-<div id="lightbox" role="dialog" aria-modal="true" aria-label="Bild in voller Größe" hidden>
+<style>
+  #lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(8,9,11,.96);
+    align-items: center;
+    justify-content: center;
+  }
+  #lightbox.open { display: flex; }
+  #lightbox img {
+    max-width: calc(100vw - 120px);
+    max-height: calc(100vh - 80px);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 24px 80px rgba(0,0,0,.7);
+    display: block;
+  }
+  #lightbox-close, #lightbox-prev, #lightbox-next {
+    position: fixed;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.14);
+    color: #f4f0e8;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 1.4rem;
+    line-height: 1;
+    font-family: inherit;
+    transition: background .2s, border-color .2s;
+  }
+  #lightbox-close { top: 20px; right: 24px; padding: .6rem .9rem; font-size: 1.1rem; }
+  #lightbox-prev  { top: 50%; left: 16px;  transform: translateY(-50%); padding: .8rem 1.1rem; }
+  #lightbox-next  { top: 50%; right: 16px; transform: translateY(-50%); padding: .8rem 1.1rem; }
+  #lightbox-close:hover, #lightbox-prev:hover, #lightbox-next:hover {
+    background: rgba(215,168,95,.18);
+    border-color: rgba(215,168,95,.7);
+  }
+  @media (max-width: 760px) {
+    #lightbox img { max-width: 100vw; max-height: calc(100vh - 120px); border-radius: 0; }
+    #lightbox-prev { left: 4px; }
+    #lightbox-next { right: 4px; }
+  }
+</style>
+<div id="lightbox" role="dialog" aria-modal="true" aria-label="Bild in voller Größe">
   <button id="lightbox-close" aria-label="Schließen">✕</button>
   <button id="lightbox-prev" aria-label="Vorheriges Bild">&#8592;</button>
   <button id="lightbox-next" aria-label="Nächstes Bild">&#8594;</button>
@@ -142,13 +188,13 @@
   function lbOpen(srcs, idx) {
     lbSrcs = srcs; lbIdx = idx;
     lbShow();
-    lightbox.hidden = false;
+    lightbox.classList.add("open");
     document.body.style.overflow = 'hidden';
     lbClose.focus();
   }
 
   function lbCloseAll() {
-    lightbox.hidden = true;
+    lightbox.classList.remove("open");
     document.body.style.overflow = '';
   }
 
@@ -157,7 +203,7 @@
   lbNext.addEventListener('click',  function () { lbIdx++; lbShow(); });
   lightbox.addEventListener('click', function (e) { if (e.target === lightbox) lbCloseAll(); });
   document.addEventListener('keydown', function (e) {
-    if (lightbox.hidden) return;
+    if (!lightbox.classList.contains("open")) return;
     if (e.key === 'Escape')                                   lbCloseAll();
     if (e.key === 'ArrowLeft'  && lbIdx > 0)                 { lbIdx--; lbShow(); }
     if (e.key === 'ArrowRight' && lbIdx < lbSrcs.length - 1) { lbIdx++; lbShow(); }
