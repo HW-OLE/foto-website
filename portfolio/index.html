@@ -7,7 +7,6 @@
   <title>Fotos — Ole B Fotografie</title>
   <link rel="icon" href="/wp-content/uploads/2022/08/logo2-150x150.png">
   <link rel="stylesheet" href="/assets/site.css">
-  <script src="/assets/site.js" defer></script>
 </head>
 <body>
 
@@ -35,7 +34,6 @@
       <p class="lead">Eine Auswahl aus den Bilddateien. Zum Öffnen der großen Version einfach ein Bild anklicken.</p>
     </section>
   </div>
-
   <div class="wrap">
     <section class="section grid gallery" id="gallery" aria-label="Fotogalerie">
       <p class="muted" id="gallery-loading" style="grid-column:1/-1">Bilder werden geladen…</p>
@@ -57,6 +55,9 @@
     <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noreferrer">CC BY-NC 4.0</a>
   </div>
 </footer>
+
+<!-- Script am Ende des body, kein defer nötig da DOM bereits geladen -->
+<script src="/assets/site.js"></script>
 
 </body>
 </html>
