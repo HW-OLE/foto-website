@@ -35,9 +35,7 @@
     </section>
   </div>
   <div class="wrap">
-    <section class="section grid gallery" id="gallery" aria-label="Fotogalerie">
-      <p class="muted" id="gallery-loading" style="grid-column:1/-1">Bilder werden geladen…</p>
-    </section>
+    <section class="section grid gallery" id="gallery" aria-label="Fotogalerie"></section>
   </div>
 </main>
 
@@ -51,13 +49,121 @@
 
 <footer class="site-footer">
   <div class="wrap">
-    © <span data-year></span> Ole B Fotografie · Bilder unter
+    © 2025 Ole B Fotografie · Bilder unter
     <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noreferrer">CC BY-NC 4.0</a>
   </div>
 </footer>
 
-<!-- Script am Ende des body, kein defer nötig da DOM bereits geladen -->
-<script src="/assets/site.js"></script>
+<script>
+(function () {
+  var PHOTOS = [
+    '/wp-content/uploads/2022/08/DSC00295.jpg',
+    '/wp-content/uploads/2022/08/DSC00333.jpg',
+    '/wp-content/uploads/2022/08/DSC0367.jpg',
+    '/wp-content/uploads/2022/08/DSC6709.jpg',
+    '/wp-content/uploads/2022/08/wiesenentwaesserung.jpg',
+    '/wp-content/uploads/auswahl_neu/Kursfahrt_147_151025.jpg',
+    '/wp-content/uploads/auswahl_neu/Kursfahrt_154_151025.jpg',
+    '/wp-content/uploads/auswahl_neu/Kursfahrt_169_151025.jpg',
+    '/wp-content/uploads/auswahl_neu/Kursfahrt_186_171025.jpg',
+    '/wp-content/uploads/auswahl_neu/Kursfahrt_28_131025.jpg',
+    '/wp-content/uploads/auswahl_neu/Kursfahrt_30_131025.jpg',
+    '/wp-content/uploads/auswahl_neu/Kursfahrt_45_131025.jpg',
+    '/wp-content/uploads/auswahl_neu/Kursfahrt_56_131025.jpg',
+    '/wp-content/uploads/auswahl_neu/Kursfahrt_6_131025.jpg',
+    '/wp-content/uploads/auswahl_neu/_DSC0128.jpg',
+    '/wp-content/uploads/auswahl_neu/_DSC5749.jpg',
+    '/wp-content/uploads/auswahl_neu/_DSC5768.jpg',
+    '/wp-content/uploads/auswahl_neu/_DSC6503.jpg'
+  ];
+
+  var SLOTS = ['wide','wide','small','tall','small','small','wide','small','small','wide','small','tall'];
+
+  function shuffle(arr) {
+    var a = arr.slice(), i, j, t;
+    for (i = a.length - 1; i > 0; i--) {
+      j = Math.floor(Math.random() * (i + 1));
+      t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  function buildPool(n) {
+    var pool = [];
+    while (pool.length < n) pool = pool.concat(SLOTS);
+    return shuffle(pool).slice(0, n);
+  }
+
+  function pickSlot(pool) {
+    return pool.shift() || 'small';
+  }
+
+  /* ── Galerie rendern ── */
+  var gallery = document.getElementById('gallery');
+  var ordered = shuffle(PHOTOS);
+  var pool    = buildPool(ordered.length);
+
+  ordered.forEach(function (src, i) {
+    var a   = document.createElement('a');
+    a.className = 'photo ' + pickSlot(pool);
+    a.href  = src;
+
+    var img = document.createElement('img');
+    img.src     = src;
+    img.alt     = 'Foto von Ole B';
+    img.loading = 'lazy';
+
+    a.appendChild(img);
+
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      lbOpen(ordered, i);
+    });
+
+    gallery.appendChild(a);
+  });
+
+  /* ── Lightbox ── */
+  var lightbox = document.getElementById('lightbox');
+  var lbImg    = document.getElementById('lightbox-img');
+  var lbClose  = document.getElementById('lightbox-close');
+  var lbPrev   = document.getElementById('lightbox-prev');
+  var lbNext   = document.getElementById('lightbox-next');
+  var lbSrcs   = [];
+  var lbIdx    = 0;
+
+  function lbShow() {
+    lbImg.src     = lbSrcs[lbIdx];
+    lbImg.alt     = 'Foto ' + (lbIdx + 1) + ' von ' + lbSrcs.length;
+    lbPrev.hidden = lbIdx === 0;
+    lbNext.hidden = lbIdx === lbSrcs.length - 1;
+  }
+
+  function lbOpen(srcs, idx) {
+    lbSrcs = srcs; lbIdx = idx;
+    lbShow();
+    lightbox.hidden = false;
+    document.body.style.overflow = 'hidden';
+    lbClose.focus();
+  }
+
+  function lbCloseAll() {
+    lightbox.hidden = true;
+    document.body.style.overflow = '';
+  }
+
+  lbClose.addEventListener('click', lbCloseAll);
+  lbPrev.addEventListener('click',  function () { lbIdx--; lbShow(); });
+  lbNext.addEventListener('click',  function () { lbIdx++; lbShow(); });
+  lightbox.addEventListener('click', function (e) { if (e.target === lightbox) lbCloseAll(); });
+  document.addEventListener('keydown', function (e) {
+    if (lightbox.hidden) return;
+    if (e.key === 'Escape')                                   lbCloseAll();
+    if (e.key === 'ArrowLeft'  && lbIdx > 0)                 { lbIdx--; lbShow(); }
+    if (e.key === 'ArrowRight' && lbIdx < lbSrcs.length - 1) { lbIdx++; lbShow(); }
+  });
+})();
+</script>
 
 </body>
 </html>
